@@ -1,4 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Intern Management System
+
+Hệ thống quản lý thực tập sinh xây dựng với Next.js App Router, Supabase và Shadcn UI.
+
+## Chạy local
+
+```bash
+npm install
+copy .env.example .env.local
+npm run dev
+```
+
+Điền hai biến Supabase trong `.env.local`, sau đó chạy [supabase/schema.sql](supabase/schema.sql) trên Supabase SQL Editor.
+
+## Realtime
+
+Trong Supabase Dashboard, vào **Database > Publications > supabase_realtime** và bật bảng `tasks`, `leave_requests`. Header dashboard sẽ nhận bản ghi mới/cập nhật theo thời gian thực.
+
+## Deploy GitHub và Vercel
+
+```bash
+git init
+git add .
+git commit -m "Initialize intern management system"
+git branch -M main
+git remote add origin https://github.com/<account>/<repository>.git
+git push -u origin main
+```
+
+Trên Vercel, import repository GitHub và thêm `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` cho Production, Preview và Development. Mỗi lần push vào GitHub sẽ tạo deployment tự động.This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
