@@ -25,12 +25,15 @@ export async function login(_previousState: LoginState, formData: FormData): Pro
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email,
+    email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
   })
 
   if (error) {
-    return { error: 'Email hoặc mật khẩu không chính xác.' }
+    if (error.message.toLowerCase().includes('email not confirmed')) {
+      return { error: 'Email chưa được xác nhận. Hãy xác nhận email trong Supabase Authentication hoặc tắt Confirm email khi thử nghiệm.' }
+    }
+    return { error: 'Email hoặc mật khẩu không chính xác. Nếu vừa đổi quyền trong Supabase, hãy đăng xuất và thử lại.' }
   }
 
   redirect(parsed.data.next?.startsWith('/') ? parsed.data.next : '/dashboard')

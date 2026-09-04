@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, ClipboardCheck, LayoutDashboard, LogOut, Menu, Settings, Users, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ClipboardCheck, FileCheck2, LayoutDashboard, LogOut, Menu, Settings, Users, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { logout } from '@/app/login/actions'
 import { RealtimeNotifications } from './realtime-notifications'
@@ -15,7 +15,7 @@ const roleLabels: Record<Role, string> = { admin: 'Quản trị viên', mentor: 
 const navigation = [
   { label: 'Tổng quan', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'mentor', 'intern'] },
   { label: 'Công việc', href: '/dashboard/tasks', icon: ClipboardCheck, roles: ['admin', 'mentor', 'intern'] },
-  { label: 'Thực tập sinh', href: '/admin/interns', icon: Users, roles: ['admin', 'mentor'] },
+  { label: 'Phân quyền', href: '/admin/interns', icon: Users, roles: ['admin'] },
   { label: 'Điểm danh', href: '/dashboard/attendance', icon: ClipboardCheck, roles: ['admin', 'mentor', 'intern'] },
   { label: 'Cài đặt', href: '/dashboard/settings', icon: Settings, roles: ['admin', 'mentor', 'intern'] },
   { label: 'Đơn nghỉ phép', href: '/dashboard/requests', icon: FileCheck2, roles: ['admin', 'mentor', 'intern'] },
@@ -56,8 +56,7 @@ export function DashboardShell({ profile, children }: { profile: Profile; childr
       <div className={`transition-[padding] lg:pl-64 ${collapsed ? 'lg:pl-20' : ''}`}>
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6 dark:border-slate-800 dark:bg-slate-900/90">
           <div className="flex items-center gap-2"><Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Mở menu"><Menu /></Button><Button variant="ghost" size="icon" className="hidden lg:inline-flex" onClick={() => setCollapsed(!collapsed)} aria-label="Thu gọn sidebar">{collapsed ? <ChevronRight /> : <ChevronLeft />}</Button><span className="text-sm text-slate-500">Không gian làm việc</span></div>
-          <div className="flex items-center gap-2"><Button variant="ghost" size="icon" aria-label="Thông báo"><Bell /></Button><details className="relative"><summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"><span className="flex size-8 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">{initials}</span><span className="hidden max-w-32 truncate text-sm font-medium sm:block">{profile.full_name}</span></summary><div className="absolute right-0 top-11 w-52 rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900"><p className="border-b border-slate-100 px-2 pb-2 text-xs text-slate-500 dark:border-slate-800">{profile.email}</p><form action={logout}><button className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950"><LogOut className="size-4" />Đăng xuất</button></form></div></details></div>
-            <div className="flex items-center gap-2"><RealtimeNotifications /><details className="relative"><summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"><span className="flex size-8 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">{initials}</span><span className="hidden max-w-32 truncate text-sm font-medium sm:block">{profile.full_name}</span></summary><div className="absolute right-0 top-11 w-52 rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900"><p className="border-b border-slate-100 px-2 pb-2 text-xs text-slate-500 dark:border-slate-800">{profile.email}</p><form action={logout}><button className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950"><LogOut className="size-4" />Đăng xuất</button></form></div></details></div>
+          <div className="flex items-center gap-2"><RealtimeNotifications /><details className="relative"><summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"><span className="flex size-8 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">{initials}</span><span className="hidden max-w-32 truncate text-sm font-medium sm:block">{profile.full_name}</span></summary><div className="absolute right-0 top-11 w-52 rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900"><p className="border-b border-slate-100 px-2 pb-2 text-xs text-slate-500 dark:border-slate-800">{profile.email}</p><form action={logout}><button className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950"><LogOut className="size-4" />Đăng xuất</button></form></div></details></div>
         </header>
         <main className="p-4 sm:p-6">{children}</main>
       </div>
