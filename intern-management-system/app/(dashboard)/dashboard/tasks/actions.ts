@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { type ActionResult, OK, fail } from '@/lib/action-utils'
 
 const taskSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -12,13 +13,13 @@ const taskSchema = z.object({
   deadline: z.string().optional(),
 })
 
-export async function createTask(formData: FormData) {
+export async function createTask(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const values = taskSchema.safeParse(Object.fromEntries(formData))
-  if (!values.success) throw new Error('Thông tin công việc không hợp lệ.')
+  if (!values.success) return fail('Thông tin công việc không hợp lệ.')
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Bạn cần đăng nhập để thực hiện thao tác này.')
+  if (!user) return fail('Bạn cần đăng nhập để thực hiện thao tác này.')
 
   const { error } = await supabase.from('tasks').insert({
     ...values.data,
@@ -26,18 +27,28 @@ export async function createTask(formData: FormData) {
     description: values.data.description || null,
     deadline: values.data.deadline || null,
   })
-  if (error) throw new Error('Không thể tạo công việc.')
+  if (error) return fail('Không thể tạo công việc. Kiểm tra quyền phân công.')
   revalidatePath('/dashboard/tasks')
+  return OK
 }
 
-export async function updateTaskStatus(formData: FormData) {
-  const taskId = z.string().uuid().parse(formData.get('task_id'))
-  const status = z.enum(['todo', 'doing', 'done']).parse(formData.get('status'))
+export async function updateTaskStatus(formData: FormData): Promise<void>
+export async function updateTaskStatus(prev: ActionResult, formData: FormData): Promise<ActionResult>
+export async function updateTaskStatus(
+  arg1: ActionResult | FormData,
+  arg2?: FormData
+): Promise<ActionResult | void> {
+  const formData = arg2 instanceof FormData ? arg2 : (arg1 as FormData)
+  const taskId = z.string().uuid().safeParse(formData.get('task_id'))
+  const status = z.enum(['todo', 'doing', 'done']).safeParse(formData.get('status'))
+  if (!taskId.success || !status.success) return fail('Dữ liệu không hợp lệ.')
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Bạn cần đăng nhập để thực hiện thao tác này.')
+  if (!user) return fail('Bạn cần đăng nhập.')
 
-  const { error } = await supabase.from('tasks').update({ status }).eq('id', taskId)
-  if (error) throw new Error('Không thể cập nhật trạng thái.')
+  const { error } = await supabase.from('tasks').update({ status: status.data }).eq('id', taskId.data)
+  if (error) return fail('Không thể cập nhật trạng thái.')
   revalidatePath('/dashboard/tasks')
+  return OK
 }

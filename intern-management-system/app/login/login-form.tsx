@@ -17,9 +17,11 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md border-white/60 bg-white/90 shadow-xl shadow-slate-900/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/90">
       <CardHeader className="space-y-2">
-        <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-sky-500 text-lg font-bold text-white">IT</div>
-        <CardTitle>Đăng nhập hệ thống</CardTitle>
-        <CardDescription>Truy cập không gian quản lý thực tập sinh của trung tâm CNTT.</CardDescription>
+        <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 via-green-600 to-amber-500 text-sm font-black text-white shadow-md shadow-emerald-900/20 ring-1 ring-white/20">
+          DLU
+        </div>
+        <CardTitle className="text-xl font-bold text-emerald-950 dark:text-emerald-50">Đại học Đà Lạt</CardTitle>
+        <CardDescription>Hệ thống Quản lý Thực tập sinh • Cổng thông tin thực tập</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={formAction} className="space-y-5">

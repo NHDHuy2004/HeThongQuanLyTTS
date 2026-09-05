@@ -21,7 +21,7 @@ export default async function PermissionsPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <p className="text-sm font-medium text-sky-600">Administration</p>
+        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Quản trị hệ thống</p>
         <h1 className="text-2xl font-semibold tracking-tight">Phân quyền tài khoản</h1>
         <p className="mt-1 text-sm text-slate-500">Đổi vai trò và phân công Mentor mà không cần chạy SQL.</p>
       </div>
