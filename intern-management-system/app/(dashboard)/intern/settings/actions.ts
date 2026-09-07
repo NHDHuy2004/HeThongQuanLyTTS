@@ -27,6 +27,6 @@ export async function updateProfile(formData: FormData) {
   }).eq('id', user.id)
   if (error) throw new Error('Không thể cập nhật hồ sơ.')
 
-  revalidatePath('/dashboard/settings')
-  revalidatePath('/dashboard')
+  revalidatePath('/intern/settings')
+  revalidatePath('/intern')
 }

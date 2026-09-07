@@ -3,7 +3,7 @@ import { createRequest, reviewRequest } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge, statusVariant, statusLabel } from '@/components/ui/badge'
-import { Calendar, FileCheck2, Clock, Check, X, AlertCircle } from 'lucide-react'
+import { FileCheck2, Clock, Check, X, AlertCircle } from 'lucide-react'
 
 export default async function RequestsPage() {
   const supabase = await createClient()
@@ -37,17 +37,8 @@ export default async function RequestsPage() {
   const { data: requests } = await query
 
   // If intern, fetch mentor info or list of mentors
-  let assignedMentor: any = null
   let allMentors: any[] = []
   if (isIntern) {
-    if (profile.mentor_id) {
-      const { data: mentor } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .eq('id', profile.mentor_id)
-        .single()
-      assignedMentor = mentor
-    }
     const { data: mentors } = await supabase
       .from('profiles')
       .select('id, full_name')
@@ -88,7 +79,7 @@ export default async function RequestsPage() {
             <p className="text-xs text-slate-500">Điền thông tin bên dưới để gửi yêu cầu phê duyệt</p>
           </div>
 
-          {!profile.mentor_id && allMentors.length === 0 && (
+          {!profile.mentor_id && (
             <div className="mb-4 flex items-center gap-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
               <AlertCircle className="size-4 shrink-0" />
               Bạn chưa được phân công Mentor. Vui lòng báo với Quản trị viên để được gán Mentor trước khi gửi đơn.
@@ -111,20 +102,17 @@ export default async function RequestsPage() {
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Người duyệt (Mentor)</label>
               <select
                 name="mentor_id"
-                defaultValue={assignedMentor?.id ?? profile.mentor_id ?? ''}
+                defaultValue={profile.mentor_id ?? ''}
                 required
+                disabled={!profile.mentor_id}
                 className="h-10 w-full rounded-lg border border-slate-200 bg-transparent px-3 text-sm dark:border-slate-700"
               >
-                {assignedMentor ? (
-                  <option value={assignedMentor.id}>{assignedMentor.full_name} (Mentor phụ trách của bạn)</option>
-                ) : (
-                  <>
-                    <option value="">-- Chọn Mentor duyệt đơn --</option>
-                    {allMentors.map((m) => (
-                      <option key={m.id} value={m.id}>{m.full_name}</option>
-                    ))}
-                  </>
-                )}
+                <option value="">-- Chọn Mentor duyệt đơn --</option>
+                {allMentors.map((mentor) => (
+                  <option key={mentor.id} value={mentor.id}>
+                    {mentor.full_name}{mentor.id === profile.mentor_id ? ' (Mentor được phân công)' : ''}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -149,7 +137,7 @@ export default async function RequestsPage() {
             </div>
 
             <div className="sm:col-span-2">
-              <Button type="submit" className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white">
+              <Button type="submit" disabled={!profile.mentor_id} className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white">
                 Gửi đơn phê duyệt
               </Button>
             </div>

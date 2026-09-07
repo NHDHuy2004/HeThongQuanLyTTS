@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createEvaluation } from '@/app/(dashboard)/dashboard/evaluations/actions'
+import { createEvaluation } from '@/app/(dashboard)/intern/evaluations/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Star, Award, MessageSquareQuote } from 'lucide-react'

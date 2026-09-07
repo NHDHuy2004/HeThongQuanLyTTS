@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { updateTaskStatus } from '@/app/(dashboard)/dashboard/tasks/actions'
-import { NewTaskForm } from '@/app/(dashboard)/dashboard/tasks/new-task-form'
+import { updateTaskStatus } from '@/app/(dashboard)/intern/tasks/actions'
+import { NewTaskForm } from '@/app/(dashboard)/intern/tasks/new-task-form'
 import { Badge, statusVariant, statusLabel } from '@/components/ui/badge'
 import { Calendar, User, CheckCircle2 } from 'lucide-react'
 

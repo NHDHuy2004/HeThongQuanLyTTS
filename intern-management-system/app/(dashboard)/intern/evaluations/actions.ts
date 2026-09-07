@@ -47,6 +47,6 @@ export async function createEvaluation(formData: FormData) {
     { onConflict: 'intern_id,mentor_id,type_period' }
   )
   if (error) throw new Error('Không thể lưu đánh giá.')
-  revalidatePath('/dashboard/evaluations')
-  revalidatePath('/dashboard')
+  revalidatePath('/intern/evaluations')
+  revalidatePath('/intern')
 }

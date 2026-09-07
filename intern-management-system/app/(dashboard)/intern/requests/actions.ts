@@ -19,6 +19,15 @@ export async function createRequest(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Bạn cần đăng nhập để gửi đơn.')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, mentor_id')
+    .eq('id', user.id)
+    .single()
+  if (profile?.role !== 'intern' || profile.mentor_id !== parsed.data.mentor_id) {
+    throw new Error('Mentor duyệt đơn phải là Mentor đang được Admin phân công cho bạn.')
+  }
+
   const { error } = await supabase.from('leave_requests').insert({
     ...parsed.data,
     intern_id: user.id,
@@ -26,8 +35,8 @@ export async function createRequest(formData: FormData) {
     end_date: parsed.data.end_date.toISOString().slice(0, 10),
   })
   if (error) throw new Error('Không thể gửi đơn. Vui lòng kiểm tra lại Mentor phụ trách.')
-  revalidatePath('/dashboard/requests')
-  revalidatePath('/dashboard')
+  revalidatePath('/intern/requests')
+  revalidatePath('/intern')
 }
 
 export async function reviewRequest(formData: FormData) {
@@ -51,6 +60,6 @@ export async function reviewRequest(formData: FormData) {
 
   const { error } = await supabase.from('leave_requests').update({ status, reviewed_at: new Date().toISOString() }).eq('id', id)
   if (error) throw new Error('Không thể cập nhật đơn.')
-  revalidatePath('/dashboard/requests')
-  revalidatePath('/dashboard')
+  revalidatePath('/intern/requests')
+  revalidatePath('/intern')
 }

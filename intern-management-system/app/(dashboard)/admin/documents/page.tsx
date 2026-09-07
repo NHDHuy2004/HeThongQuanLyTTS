@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { uploadDocument } from '@/app/(dashboard)/dashboard/documents/actions'
+import { uploadDocument } from '@/app/(dashboard)/intern/documents/actions'
 import { Button } from '@/components/ui/button'
 import { FolderOpen, UploadCloud, FileText } from 'lucide-react'
 

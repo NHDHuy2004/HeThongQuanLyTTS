@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { updateProfile } from '@/app/(dashboard)/dashboard/settings/actions'
+import { updateProfile } from '@/app/(dashboard)/intern/settings/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 

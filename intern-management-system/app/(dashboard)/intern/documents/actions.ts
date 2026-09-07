@@ -15,5 +15,5 @@ export async function uploadDocument(formData: FormData) {
   const path = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '-')}`
   const { error } = await supabase.storage.from('documents').upload(path, file, { contentType: file.type, upsert: false })
   if (error) throw new Error('Không thể upload file.')
-  revalidatePath('/dashboard/documents')
+  revalidatePath('/intern/documents')
 }

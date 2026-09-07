@@ -50,7 +50,7 @@ export async function createTask(_prev: ActionResult, formData: FormData): Promi
     deadline: values.data.deadline || null,
   })
   if (error) return fail('Không thể tạo công việc. Kiểm tra quyền phân công.')
-  revalidatePath('/dashboard/tasks')
+  revalidatePath('/intern/tasks')
   return OK
 }
 
@@ -71,6 +71,6 @@ export async function updateTaskStatus(
 
   const { error } = await supabase.from('tasks').update({ status: status.data }).eq('id', taskId.data)
   if (error) return fail('Không thể cập nhật trạng thái.')
-  revalidatePath('/dashboard/tasks')
+  revalidatePath('/intern/tasks')
   return OK
 }

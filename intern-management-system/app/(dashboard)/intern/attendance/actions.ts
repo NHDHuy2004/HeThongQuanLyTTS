@@ -18,8 +18,8 @@ export async function checkIn() {
     { onConflict: 'intern_id,date' }
   )
   if (error) throw new Error('Không thể ghi nhận check-in.')
-  revalidatePath('/dashboard/attendance')
-  revalidatePath('/dashboard')
+  revalidatePath('/intern/attendance')
+  revalidatePath('/intern')
 }
 
 export async function checkOut() {
@@ -41,6 +41,6 @@ export async function checkOut() {
     { check_out_time: now.toISOString(), total_hours: Math.max(0, Number(totalHours.toFixed(2))) },
   ).eq('intern_id', user.id).eq('date', date)
   if (error) throw new Error('Không thể ghi nhận check-out.')
-  revalidatePath('/dashboard/attendance')
-  revalidatePath('/dashboard')
+  revalidatePath('/intern/attendance')
+  revalidatePath('/intern')
 }

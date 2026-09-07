@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { reviewRequest } from '@/app/(dashboard)/dashboard/requests/actions'
+import { reviewRequest } from '@/app/(dashboard)/intern/requests/actions'
 import { Button } from '@/components/ui/button'
 import { Badge, statusVariant, statusLabel } from '@/components/ui/badge'
 import { Clock, Check, X } from 'lucide-react'

@@ -41,5 +41,5 @@ export async function updatePermission(formData: FormData) {
   if (error) throw new Error('Không thể cập nhật phân quyền.')
 
   revalidatePath('/admin/interns')
-  revalidatePath('/dashboard')
+  revalidatePath('/admin/interns')
 }

@@ -167,17 +167,17 @@ async function AdminDashboardView({ supabase }: { supabase: any }) {
               <ShieldCheck className="size-4 text-emerald-600" /> Phân quyền & Quản lý tài khoản
             </Button>
           </Link>
-          <Link href="/dashboard/tasks">
+          <Link href="/intern/tasks">
             <Button variant="outline" className="gap-2">
               <ClipboardCheck className="size-4 text-blue-600" /> Giám sát công việc ({openTaskCount ?? 0})
             </Button>
           </Link>
-          <Link href="/dashboard/attendance">
+          <Link href="/intern/attendance">
             <Button variant="outline" className="gap-2">
               <CalendarCheck className="size-4 text-emerald-600" /> Theo dõi điểm danh toàn trường
             </Button>
           </Link>
-          <Link href="/dashboard/requests">
+          <Link href="/intern/requests">
             <Button variant="outline" className="gap-2">
               <FileCheck2 className="size-4 text-orange-600" /> Duyệt đơn nghỉ phép / WFH
             </Button>
@@ -193,7 +193,7 @@ async function AdminDashboardView({ supabase }: { supabase: any }) {
               <TrendingUp className="size-4 text-emerald-600" />
               <h2 className="font-semibold">Công việc gần đây</h2>
             </div>
-            <Link href="/dashboard/tasks" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">Xem tất cả</Link>
+                    <Link href="/intern/tasks" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">Xem tất cả</Link>
           </div>
           {recentTasks?.length ? (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -223,7 +223,7 @@ async function AdminDashboardView({ supabase }: { supabase: any }) {
               <CalendarDays className="size-4 text-orange-600" />
               <h2 className="font-semibold">Đơn nghỉ phép gần đây</h2>
             </div>
-            <Link href="/dashboard/requests" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">Xem tất cả</Link>
+                    <Link href="/intern/requests" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">Xem tất cả</Link>
           </div>
           {recentRequests?.length ? (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -331,7 +331,7 @@ async function MentorDashboardView({ supabase, userId }: { supabase: any; userId
               <AlertCircle className="size-4 text-orange-600" />
               Đơn nghỉ phép của TTS cần phê duyệt ({pendingRequestCount})
             </h2>
-            <Link href="/dashboard/requests">
+            <Link href="/intern/requests">
               <Button size="sm" variant="outline" className="text-orange-700 border-orange-300 hover:bg-orange-100">Xem tất cả</Button>
             </Link>
           </div>
@@ -356,7 +356,7 @@ async function MentorDashboardView({ supabase, userId }: { supabase: any; userId
             <h2 className="font-semibold">Danh sách Thực tập sinh phụ trách</h2>
             <p className="text-xs text-slate-500">Các sinh viên được phân công cho bạn hướng dẫn</p>
           </div>
-          <Link href="/dashboard/tasks">
+          <Link href="/intern/tasks">
             <Button size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white gap-1.5">
               <ClipboardCheck className="size-3.5" /> Giao việc cho nhóm
             </Button>
@@ -394,7 +394,7 @@ async function MentorDashboardView({ supabase, userId }: { supabase: any; userId
             <TrendingUp className="size-4 text-emerald-600" />
             <h2 className="font-semibold">Nhiệm vụ đang giao cho TTS</h2>
           </div>
-          <Link href="/dashboard/tasks" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">Quản lý nhiệm vụ</Link>
+          <Link href="/intern/tasks" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">Quản lý nhiệm vụ</Link>
         </div>
         {recentTasks?.length ? (
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -611,7 +611,7 @@ async function InternDashboardView({
               <ClipboardCheck className="size-4 text-emerald-600" />
               <h2 className="font-semibold">Công việc của bạn</h2>
             </div>
-            <Link href="/dashboard/tasks" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+            <Link href="/intern/tasks" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">
               Xem bảng công việc
             </Link>
           </div>
@@ -643,7 +643,7 @@ async function InternDashboardView({
               <CalendarDays className="size-4 text-orange-600" />
               <h2 className="font-semibold">Đơn xin nghỉ phép / WFH của bạn</h2>
             </div>
-            <Link href="/dashboard/requests" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+            <Link href="/intern/requests" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">
               Gửi đơn mới
             </Link>
           </div>
@@ -675,7 +675,7 @@ async function InternDashboardView({
               <Star className="size-4 text-amber-500" />
               Đánh giá gần nhất từ Mentor ({latestEvaluation.type_period === 'midterm' ? 'Giữa kỳ' : 'Cuối kỳ'})
             </h2>
-            <Link href="/dashboard/evaluations" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+            <Link href="/intern/evaluations" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">
               Xem bảng điểm chi tiết
             </Link>
           </div>

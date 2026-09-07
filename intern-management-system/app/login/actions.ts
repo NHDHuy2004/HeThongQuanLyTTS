@@ -30,10 +30,19 @@ export async function login(_previousState: LoginState, formData: FormData): Pro
   })
 
   if (error) {
-    if (error.message.toLowerCase().includes('email not confirmed')) {
+    const errorCode = 'code' in error && typeof error.code === 'string' ? error.code : ''
+    const errorMessage = error.message.toLowerCase()
+
+    if (errorCode === 'email_not_confirmed' || errorMessage.includes('email not confirmed')) {
       return { error: 'Email chưa được xác nhận. Hãy xác nhận email trong Supabase Authentication hoặc tắt Confirm email khi thử nghiệm.' }
     }
-    return { error: 'Email hoặc mật khẩu không chính xác. Nếu vừa đổi quyền trong Supabase, hãy đăng xuất và thử lại.' }
+    if (errorCode === 'over_request_rate_limit' || error.status === 429) {
+      return { error: 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng chờ vài phút rồi thử lại.' }
+    }
+    if (errorCode === 'invalid_credentials' || errorMessage.includes('invalid login credentials')) {
+      return { error: 'Email hoặc mật khẩu không chính xác. Hãy kiểm tra lại thông tin hoặc đặt lại mật khẩu trong Supabase.' }
+    }
+    return { error: 'Không thể đăng nhập lúc này. Vui lòng thử lại sau.' }
   }
 
   let target = parsed.data.next?.startsWith('/') ? parsed.data.next : ''
@@ -52,6 +61,9 @@ export async function login(_previousState: LoginState, formData: FormData): Pro
 
 export async function logout() {
   const supabase = await createClient()
-  await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    throw new Error('Không thể đăng xuất. Vui lòng thử lại.')
+  }
   redirect('/login')
 }
