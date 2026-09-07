@@ -34,21 +34,41 @@ const roleLabels: Record<Role, string> = {
 }
 
 const roleBadgeColors: Record<Role, string> = {
-  admin: 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300',
-  mentor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300',
-  intern: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300',
+  admin: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40',
+  mentor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40',
+  intern: 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40',
 }
 
-const navigation = [
-  { label: 'Tổng quan', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'mentor', 'intern'] },
-  { label: 'Công việc', href: '/dashboard/tasks', icon: ClipboardCheck, roles: ['admin', 'mentor', 'intern'] },
-  { label: 'Điểm danh', href: '/dashboard/attendance', icon: CalendarCheck, roles: ['admin', 'mentor', 'intern'] },
-  { label: 'Đơn nghỉ phép', href: '/dashboard/requests', icon: FileCheck2, roles: ['admin', 'mentor', 'intern'] },
-  { label: 'Đánh giá', href: '/dashboard/evaluations', icon: Star, roles: ['admin', 'mentor', 'intern'] },
-  { label: 'Tài liệu', href: '/dashboard/documents', icon: FolderOpen, roles: ['admin', 'mentor', 'intern'] },
-  { label: 'Phân quyền', href: '/admin/interns', icon: Users, roles: ['admin'] },
-  { label: 'Cài đặt', href: '/dashboard/settings', icon: Settings, roles: ['admin', 'mentor', 'intern'] },
-]
+const roleNavigations: Record<Role, Array<{ label: string; href: string; icon: typeof LayoutDashboard }>> = {
+  admin: [
+    { label: 'Tổng quan hệ thống', href: '/admin', icon: LayoutDashboard },
+    { label: 'Phân quyền tài khoản', href: '/admin/interns', icon: Users },
+    { label: 'Quản lý công việc', href: '/admin/tasks', icon: ClipboardCheck },
+    { label: 'Giám sát điểm danh', href: '/admin/attendance', icon: CalendarCheck },
+    { label: 'Quản lý đơn nghỉ phép', href: '/admin/requests', icon: FileCheck2 },
+    { label: 'Báo cáo đánh giá', href: '/admin/evaluations', icon: Star },
+    { label: 'Kho tài liệu', href: '/admin/documents', icon: FolderOpen },
+    { label: 'Cài đặt hệ thống', href: '/admin/settings', icon: Settings },
+  ],
+  mentor: [
+    { label: 'Bàn làm việc Mentor', href: '/mentor', icon: LayoutDashboard },
+    { label: 'Giao việc & Tiến độ', href: '/mentor/tasks', icon: ClipboardCheck },
+    { label: 'Điểm danh TTS', href: '/mentor/attendance', icon: CalendarCheck },
+    { label: 'Duyệt đơn nghỉ phép', href: '/mentor/requests', icon: FileCheck2 },
+    { label: 'Đánh giá TTS', href: '/mentor/evaluations', icon: Star },
+    { label: 'Tài liệu hướng dẫn', href: '/mentor/documents', icon: FolderOpen },
+    { label: 'Cài đặt cá nhân', href: '/mentor/settings', icon: Settings },
+  ],
+  intern: [
+    { label: 'Tổng quan của tôi', href: '/intern', icon: LayoutDashboard },
+    { label: 'Nhiệm vụ được giao', href: '/intern/tasks', icon: ClipboardCheck },
+    { label: 'Điểm danh hằng ngày', href: '/intern/attendance', icon: CalendarCheck },
+    { label: 'Xin nghỉ phép / WFH', href: '/intern/requests', icon: FileCheck2 },
+    { label: 'Kết quả đánh giá', href: '/intern/evaluations', icon: Star },
+    { label: 'Tài liệu & Báo cáo', href: '/intern/documents', icon: FolderOpen },
+    { label: 'Hồ sơ cá nhân', href: '/intern/settings', icon: Settings },
+  ],
+}
 
 export function DashboardShell({ profile, children }: { profile: Profile; children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
@@ -62,10 +82,12 @@ export function DashboardShell({ profile, children }: { profile: Profile; childr
     .slice(-2)
     .toUpperCase()
 
-  const items = navigation.filter((item) => item.roles.includes(profile.role))
+  const items = roleNavigations[profile.role] ?? roleNavigations.intern
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard'
+    if (href === '/admin' || href === '/mentor' || href === '/intern' || href === '/dashboard') {
+      return pathname === href
+    }
     return pathname.startsWith(href)
   }
 
@@ -90,7 +112,7 @@ export function DashboardShell({ profile, children }: { profile: Profile; childr
           {/* Logo */}
           <div className="flex h-16 items-center justify-between border-b border-emerald-900/10 px-4 dark:border-slate-800">
             <Link
-              href="/dashboard"
+              href={`/${profile.role}`}
               className={`flex items-center gap-3 font-semibold ${collapsed ? 'lg:mx-auto' : ''}`}
             >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-600 via-green-600 to-amber-500 text-xs font-black text-white shadow-sm ring-1 ring-black/5">
@@ -198,14 +220,22 @@ export function DashboardShell({ profile, children }: { profile: Profile; childr
                   <span className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-amber-500 text-xs font-bold text-white shadow-xs">
                     {initials}
                   </span>
-                  <span className="hidden max-w-32 truncate text-sm font-medium sm:block">
-                    {profile.full_name}
-                  </span>
+                  <div className="hidden text-left sm:block">
+                    <span className="block max-w-36 truncate text-sm font-medium leading-none">
+                      {profile.full_name}
+                    </span>
+                    <span className={`inline-block mt-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-tight ${roleBadgeColors[profile.role]}`}>
+                      {roleLabels[profile.role]}
+                    </span>
+                  </div>
                 </summary>
                 <div className="absolute right-0 top-12 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
                   <div className="border-b border-slate-100 px-3 pb-3 pt-1 dark:border-slate-800">
                     <p className="text-sm font-medium">{profile.full_name}</p>
                     <p className="text-xs text-slate-500">{profile.email}</p>
+                    <span className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${roleBadgeColors[profile.role]}`}>
+                      {roleLabels[profile.role]}
+                    </span>
                   </div>
                   <form action={logout}>
                     <button className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50">

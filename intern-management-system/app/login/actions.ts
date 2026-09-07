@@ -36,7 +36,18 @@ export async function login(_previousState: LoginState, formData: FormData): Pro
     return { error: 'Email hoặc mật khẩu không chính xác. Nếu vừa đổi quyền trong Supabase, hãy đăng xuất và thử lại.' }
   }
 
-  redirect(parsed.data.next?.startsWith('/') ? parsed.data.next : '/dashboard')
+  let target = parsed.data.next?.startsWith('/') ? parsed.data.next : ''
+  if (!target) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      target = `/${profile?.role ?? 'intern'}`
+    } else {
+      target = '/login'
+    }
+  }
+
+  redirect(target)
 }
 
 export async function logout() {

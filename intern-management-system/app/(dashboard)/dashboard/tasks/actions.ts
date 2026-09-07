@@ -21,6 +21,28 @@ export async function createTask(_prev: ActionResult, formData: FormData): Promi
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return fail('Bạn cần đăng nhập để thực hiện thao tác này.')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || profile.role === 'intern') {
+    return fail('Thực tập sinh không có quyền tạo công việc.')
+  }
+
+  if (profile.role === 'mentor') {
+    const { data: targetIntern } = await supabase
+      .from('profiles')
+      .select('id, mentor_id')
+      .eq('id', values.data.assignee_id)
+      .single()
+
+    if (values.data.assignee_id !== user.id && targetIntern?.mentor_id !== user.id) {
+      return fail('Bạn chỉ có thể phân công công việc cho thực tập sinh do mình phụ trách.')
+    }
+  }
+
   const { error } = await supabase.from('tasks').insert({
     ...values.data,
     creator_id: user.id,

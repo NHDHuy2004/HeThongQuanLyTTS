@@ -1,6 +1,7 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { updateTaskStatus } from './actions'
-import { NewTaskForm } from './new-task-form'
+import { updateTaskStatus } from '@/app/(dashboard)/dashboard/tasks/actions'
+import { NewTaskForm } from '@/app/(dashboard)/dashboard/tasks/new-task-form'
 import { Badge, statusVariant, statusLabel } from '@/components/ui/badge'
 import { Calendar, User, CheckCircle2 } from 'lucide-react'
 
@@ -10,98 +11,72 @@ const columns = [
   { key: 'done', label: 'Hoàn tất', color: 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/40 dark:bg-emerald-950/20' },
 ] as const
 
-export default async function TasksPage() {
+export default async function MentorTasksPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  if (!user) redirect('/login')
 
   const { data: currentProfile } = await supabase
     .from('profiles')
-    .select('id, role, full_name')
+    .select('role')
     .eq('id', user.id)
     .single()
 
-  const role = currentProfile?.role ?? 'intern'
-  const isIntern = role === 'intern'
-  const isMentor = role === 'mentor'
-  const isAdmin = role === 'admin'
+  if (currentProfile?.role !== 'mentor') redirect(`/${currentProfile?.role ?? 'login'}`)
 
-  // Fetch tasks according to role permissions
-  let taskQuery = supabase
-    .from('tasks')
-    .select('id, title, description, priority, status, deadline, assignee_id, creator_id, profiles!tasks_assignee_id_fkey(full_name)')
-    .order('created_at', { ascending: false })
+  // Interns assigned to this mentor
+  const { data: internProfiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, role')
+    .eq('mentor_id', user.id)
+    .eq('role', 'intern')
+    .order('full_name')
 
-  if (isIntern) {
-    taskQuery = taskQuery.eq('assignee_id', user.id)
-  }
+  const assignees = internProfiles ?? []
+  const internIds = assignees.map((i) => i.id)
 
-  const { data: tasks } = await taskQuery
-
-  // Fetch assignees for task creation (only Admin and Mentor can create tasks)
-  let assignees: Array<{ id: string; full_name: string; role: string }> = []
-  if (isAdmin) {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, full_name, role')
-      .in('role', ['intern', 'mentor'])
-      .order('full_name')
-    assignees = profiles ?? []
-  } else if (isMentor) {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, full_name, role')
-      .eq('mentor_id', user.id)
-      .eq('role', 'intern')
-      .order('full_name')
-    assignees = profiles ?? []
+  // Fetch tasks assigned to these interns or created by this mentor
+  let tasks: any[] = []
+  if (internIds.length > 0) {
+    const { data } = await supabase
+      .from('tasks')
+      .select('id, title, description, priority, status, deadline, assignee_id, creator_id, profiles!tasks_assignee_id_fkey(full_name)')
+      .in('assignee_id', [...internIds, user.id])
+      .order('created_at', { ascending: false })
+    tasks = data ?? []
   }
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      {/* Header */}
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-            {isAdmin && 'Quản trị hệ thống'}
-            {isMentor && 'Bàn làm việc Mentor'}
-            {isIntern && 'Không gian thực tập sinh'}
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {isIntern ? 'Nhiệm vụ được giao' : 'Quản lý công việc & Giao nhiệm vụ'}
-          </h1>
+          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Bàn làm việc Mentor</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Giao việc & Quản lý tiến độ</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {isIntern && 'Theo dõi danh sách và cập nhật tiến độ công việc do Mentor giao.'}
-            {isMentor && 'Phân công nhiệm vụ và giám sát tiến độ thực hiện của nhóm thực tập sinh.'}
-            {isAdmin && 'Giám sát toàn bộ công việc và nhiệm vụ trong toàn hệ thống.'}
+            Phân công công việc và giám sát việc hoàn thành của nhóm thực tập sinh do bạn hướng dẫn.
           </p>
         </div>
       </div>
 
-      {/* Task Creation Form: ONLY visible to Admin & Mentor */}
-      {!isIntern && (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Giao nhiệm vụ mới</h2>
-            <span className="text-xs text-slate-500">{assignees.length} thực tập sinh có thể phân công</span>
-          </div>
-          <NewTaskForm assignees={assignees} currentUserId={user.id} />
-        </section>
-      )}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Giao nhiệm vụ mới cho nhóm</h2>
+          <span className="text-xs text-slate-500">{assignees.length} thực tập sinh phụ trách</span>
+        </div>
+        <NewTaskForm assignees={assignees} currentUserId={user.id} />
+      </section>
 
-      {/* Kanban Board */}
+      {/* Kanban */}
       <div className="grid gap-4 lg:grid-cols-3">
         {columns.map((column) => {
-          const columnTasks = tasks?.filter((t) => t.status === column.key) ?? []
+          const columnTasks = tasks.filter((t) => t.status === column.key)
           return (
             <section
               key={column.key}
               className={`flex flex-col min-h-64 rounded-xl border p-3.5 ${column.color}`}
             >
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold flex items-center gap-2">
-                  <span>{column.label}</span>
-                </h2>
+                <h2 className="text-sm font-semibold">{column.label}</h2>
                 <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-600 shadow-xs dark:bg-slate-800 dark:text-slate-300">
                   {columnTasks.length}
                 </span>
@@ -111,7 +86,7 @@ export default async function TasksPage() {
                 {columnTasks.map((task) => (
                   <article
                     key={task.id}
-                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs transition-shadow hover:shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{task.title}</h3>
@@ -123,12 +98,10 @@ export default async function TasksPage() {
                     )}
 
                     <div className="mt-3 flex flex-wrap items-center gap-2.5 text-[11px] text-slate-500">
-                      {!isIntern && (
-                        <span className="flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
-                          <User className="size-3 text-emerald-600" />
-                          {(task as any).profiles?.full_name ?? 'Chưa rõ'}
-                        </span>
-                      )}
+                      <span className="flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
+                        <User className="size-3 text-emerald-600" />
+                        {(task as any).profiles?.full_name ?? 'Chưa rõ'}
+                      </span>
                       {task.deadline && (
                         <span className="flex items-center gap-1 text-amber-700 dark:text-amber-400">
                           <Calendar className="size-3" />
@@ -137,7 +110,6 @@ export default async function TasksPage() {
                       )}
                     </div>
 
-                    {/* Status updater */}
                     <form action={updateTaskStatus} className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
                       <input type="hidden" name="task_id" value={task.id} />
                       <div className="flex items-center gap-2">

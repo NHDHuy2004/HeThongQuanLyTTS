@@ -1,12 +1,13 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { uploadDocument } from './actions'
+import { uploadDocument } from '@/app/(dashboard)/dashboard/documents/actions'
 import { Button } from '@/components/ui/button'
 import { FolderOpen, UploadCloud, FileText } from 'lucide-react'
 
-export default async function DocumentsPage() {
+export default async function MentorDocumentsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -14,7 +15,7 @@ export default async function DocumentsPage() {
     .eq('id', user.id)
     .single()
 
-  const role = profile?.role ?? 'intern'
+  if (profile?.role !== 'mentor') redirect(`/${profile?.role ?? 'login'}`)
 
   const { data: files } = await supabase.storage
     .from('documents')
@@ -23,22 +24,13 @@ export default async function DocumentsPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-          {role === 'admin' && 'Quản trị hệ thống'}
-          {role === 'mentor' && 'Tài liệu hướng dẫn'}
-          {role === 'intern' && 'Hồ sơ & Báo cáo'}
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {role === 'intern' ? 'Tài liệu & Báo cáo thực tập' : 'Kho tài liệu & Báo cáo'}
-        </h1>
+        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Bàn làm việc Mentor</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Tài liệu hướng dẫn & Đào tạo</h1>
         <p className="mt-1 text-sm text-slate-500">
-          {role === 'intern' && 'Tải lên CV, đề cương và báo cáo định kỳ nộp cho Mentor.'}
-          {role === 'mentor' && 'Chia sẻ tài liệu hướng dẫn và lưu trữ hồ sơ đào tạo thực tập sinh.'}
-          {role === 'admin' && 'Lưu trữ các văn bản, hướng dẫn quy chuẩn và hồ sơ thực tập.'}
+          Lưu trữ các tài liệu hướng dẫn, giáo trình và tài liệu chia sẻ cho thực tập sinh.
         </p>
       </div>
 
-      {/* Upload Box */}
       <form
         action={uploadDocument}
         className="flex flex-col gap-4 rounded-2xl border-2 border-dashed border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between"
@@ -48,7 +40,7 @@ export default async function DocumentsPage() {
             <UploadCloud className="size-5" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Tải lên tệp tài liệu mới</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Tải lên tài liệu mới</p>
             <p className="text-xs text-slate-500">Định dạng hỗ trợ: PDF, Word (.doc, .docx). Tối đa 10MB.</p>
           </div>
         </div>
@@ -67,11 +59,10 @@ export default async function DocumentsPage() {
         </div>
       </form>
 
-      {/* Files List */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="border-b border-slate-200 bg-slate-50 px-5 py-3.5 dark:border-slate-800 dark:bg-slate-950 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <FolderOpen className="size-4 text-emerald-600" /> Danh sách tệp đã tải lên
+            <FolderOpen className="size-4 text-emerald-600" /> Danh sách tài liệu đã tải lên
           </h2>
           <span className="text-xs text-slate-500">{files?.length ?? 0} tệp</span>
         </div>

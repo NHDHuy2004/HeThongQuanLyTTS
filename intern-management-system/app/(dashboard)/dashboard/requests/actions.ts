@@ -18,14 +18,16 @@ export async function createRequest(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Bạn cần đăng nhập để gửi đơn.')
+
   const { error } = await supabase.from('leave_requests').insert({
     ...parsed.data,
     intern_id: user.id,
     start_date: parsed.data.start_date.toISOString().slice(0, 10),
     end_date: parsed.data.end_date.toISOString().slice(0, 10),
   })
-  if (error) throw new Error('Không thể gửi đơn.')
+  if (error) throw new Error('Không thể gửi đơn. Vui lòng kiểm tra lại Mentor phụ trách.')
   revalidatePath('/dashboard/requests')
+  revalidatePath('/dashboard')
 }
 
 export async function reviewRequest(formData: FormData) {
@@ -34,7 +36,21 @@ export async function reviewRequest(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Bạn cần đăng nhập để duyệt đơn.')
+
+  const { data: actor } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!actor || actor.role === 'intern') {
+    throw new Error('Thực tập sinh không có quyền phê duyệt đơn.')
+  }
+
+  if (actor.role === 'mentor') {
+    const { data: targetReq } = await supabase.from('leave_requests').select('mentor_id').eq('id', id).single()
+    if (targetReq?.mentor_id !== user.id) {
+      throw new Error('Bạn chỉ có thể phê duyệt đơn của thực tập sinh do mình hướng dẫn.')
+    }
+  }
+
   const { error } = await supabase.from('leave_requests').update({ status, reviewed_at: new Date().toISOString() }).eq('id', id)
   if (error) throw new Error('Không thể cập nhật đơn.')
   revalidatePath('/dashboard/requests')
+  revalidatePath('/dashboard')
 }

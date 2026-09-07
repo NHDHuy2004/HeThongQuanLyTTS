@@ -36,10 +36,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -47,9 +43,15 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
+    const userRole = profile?.role ?? 'intern'
+
+    if (pathname === '/login' || pathname === '/dashboard') {
+      return NextResponse.redirect(new URL(`/${userRole}`, request.url))
+    }
+
     const rolePath = pathname.match(/^\/(admin|mentor|intern)(\/|$)/)?.[1]
-    if (rolePath && profile?.role !== rolePath) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (rolePath && userRole !== rolePath) {
+      return NextResponse.redirect(new URL(`/${userRole}`, request.url))
     }
   }
 

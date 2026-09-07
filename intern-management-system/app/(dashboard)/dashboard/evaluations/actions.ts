@@ -19,7 +19,34 @@ export async function createEvaluation(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Bạn cần đăng nhập để đánh giá.')
-  const { error } = await supabase.from('evaluations').upsert({ intern_id: parsed.data.intern_id, mentor_id: user.id, type_period: parsed.data.type_period, scores_json: { technical: parsed.data.technical, teamwork: parsed.data.teamwork, discipline: parsed.data.discipline }, feedback: parsed.data.feedback || null }, { onConflict: 'intern_id,mentor_id,type_period' })
+
+  const { data: actor } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!actor || actor.role === 'intern') {
+    throw new Error('Thực tập sinh không có quyền thực hiện đánh giá.')
+  }
+
+  if (actor.role === 'mentor') {
+    const { data: intern } = await supabase.from('profiles').select('mentor_id').eq('id', parsed.data.intern_id).single()
+    if (intern?.mentor_id !== user.id) {
+      throw new Error('Bạn chỉ có thể đánh giá thực tập sinh do mình hướng dẫn.')
+    }
+  }
+
+  const { error } = await supabase.from('evaluations').upsert(
+    {
+      intern_id: parsed.data.intern_id,
+      mentor_id: user.id,
+      type_period: parsed.data.type_period,
+      scores_json: {
+        technical: parsed.data.technical,
+        teamwork: parsed.data.teamwork,
+        discipline: parsed.data.discipline,
+      },
+      feedback: parsed.data.feedback || null,
+    },
+    { onConflict: 'intern_id,mentor_id,type_period' }
+  )
   if (error) throw new Error('Không thể lưu đánh giá.')
   revalidatePath('/dashboard/evaluations')
+  revalidatePath('/dashboard')
 }
