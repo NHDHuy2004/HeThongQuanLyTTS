@@ -4,6 +4,14 @@ import { z } from 'zod'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+const APP_ROUTES = ['/admin', '/mentor', '/intern'] as const
+
+function safeNext(raw: string | undefined): string {
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.includes('\\')) return ''
+  const route = APP_ROUTES.find((r) => raw === r || raw.startsWith(`${r}/`))
+  return route ?? ''
+}
+
 const loginSchema = z.object({
   email: z.string().trim().email('Email không hợp lệ.'),
   password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự.'),
@@ -34,7 +42,7 @@ export async function login(_previousState: LoginState, formData: FormData): Pro
     const errorMessage = error.message.toLowerCase()
 
     if (errorCode === 'email_not_confirmed' || errorMessage.includes('email not confirmed')) {
-      return { error: 'Email chưa được xác nhận. Hãy xác nhận email trong Supabase Authentication hoặc tắt Confirm email khi thử nghiệm.' }
+      return { error: 'Email chưa được xác nhận. Vui lòng kiểm tra hộp thư và xác nhận email trước khi đăng nhập.' }
     }
     if (errorCode === 'over_request_rate_limit' || error.status === 429) {
       return { error: 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng chờ vài phút rồi thử lại.' }
@@ -45,7 +53,7 @@ export async function login(_previousState: LoginState, formData: FormData): Pro
     return { error: 'Không thể đăng nhập lúc này. Vui lòng thử lại sau.' }
   }
 
-  let target = parsed.data.next?.startsWith('/') ? parsed.data.next : ''
+  let target = safeNext(parsed.data.next)
   if (!target) {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {

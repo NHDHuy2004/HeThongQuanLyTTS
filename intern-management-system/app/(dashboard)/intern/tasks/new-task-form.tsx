@@ -9,10 +9,21 @@ import { useToast } from '@/components/ui/toast'
 import type { ActionResult } from '@/lib/action-utils'
 
 type Assignee = { id: string; full_name: string; role: string }
+type TaskOption = { id: string; title: string }
 
 const initialState: ActionResult = { success: false }
 
-export function NewTaskForm({ assignees, currentUserId }: { assignees: Assignee[]; currentUserId: string }) {
+export function NewTaskForm({
+  assignees,
+  currentUserId,
+  parentTasks = [],
+  allowSelfAssign = false,
+}: {
+  assignees: Assignee[]
+  currentUserId: string
+  parentTasks?: TaskOption[]
+  allowSelfAssign?: boolean
+}) {
   const [state, formAction, pending] = useActionState(createTask, initialState)
   const { toast } = useToast()
   const formRef = useRef<HTMLFormElement>(null)
@@ -26,17 +37,18 @@ export function NewTaskForm({ assignees, currentUserId }: { assignees: Assignee[
     }
   }, [state, toast])
 
-  const defaultAssignee = assignees[0]?.id ?? currentUserId
+  const defaultAssignee = allowSelfAssign ? currentUserId : assignees[0]?.id ?? currentUserId
 
   return (
     <form
       ref={formRef}
       action={formAction}
-      className="grid gap-3 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-2"
+      className="grid gap-3 rounded-lg border border-border bg-card p-5 shadow-card sm:grid-cols-2"
     >
       <Input name="title" placeholder="Tên công việc" required className="sm:col-span-2" />
       <Input name="description" placeholder="Mô tả ngắn (không bắt buộc)" className="sm:col-span-2" />
 
+      <Input name="category" placeholder="Danh mục (vd: API, UI, Báo cáo)" />
       <Select name="priority" defaultValue="medium">
         <option value="low">Ưu tiên thấp</option>
         <option value="medium">Ưu tiên vừa</option>
@@ -45,8 +57,17 @@ export function NewTaskForm({ assignees, currentUserId }: { assignees: Assignee[
 
       <Input name="deadline" type="datetime-local" />
 
-      <Select name="assignee_id" defaultValue={defaultAssignee}>
-        <option value={currentUserId}>Giao cho tôi</option>
+      <Select name="parent_task_id" defaultValue="">
+        <option value="">Không (công việc gốc)</option>
+        {parentTasks.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.title.length > 60 ? `${t.title.slice(0, 57)}...` : t.title}
+          </option>
+        ))}
+      </Select>
+
+      <Select name="assignee_id" defaultValue={defaultAssignee} className="sm:col-span-2">
+        {allowSelfAssign && <option value={currentUserId}>Giao cho tôi</option>}
         {assignees
           .filter((a) => a.id !== currentUserId)
           .map((a) => (

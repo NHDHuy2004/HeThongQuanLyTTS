@@ -1,5 +1,15 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/session'
+import { formatTime, statusText, todayInVietnam } from '@/lib/format'
+import { CalendarBlank } from '@phosphor-icons/react/dist/ssr/CalendarBlank'
+import { CalendarCheck } from '@phosphor-icons/react/dist/ssr/CalendarCheck'
+import { Users } from '@phosphor-icons/react/dist/ssr/Users'
+import { WarningCircle } from '@phosphor-icons/react/dist/ssr/WarningCircle'
+import { EmptyState } from '@/components/page/empty-state'
+import { PageHeader } from '@/components/page/page-header'
+import { SectionCard, SectionHeader } from '@/components/page/section-card'
+import { StatCard } from '@/components/page/stat-card'
 
 type AttendanceRecord = {
   id: string
@@ -11,26 +21,19 @@ type AttendanceRecord = {
   status: string
 }
 
-type Profile = { id: string; full_name: string; email: string; role: string; mentor_id: string | null }
+type Profile = { id: string; full_name: string; role: string; mentor_id: string | null }
 
 export default async function AdminAttendancePage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { user, profile } = await getSession()
+  if (!user || !profile) redirect('/login')
+  if (profile.role !== 'admin') redirect(`/${profile.role}`)
 
-  const { data: currentProfile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (currentProfile?.role !== 'admin') redirect(`/${currentProfile?.role ?? 'login'}`)
-
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayInVietnam()
 
   const { data: visibleProfiles } = await supabase
     .from('profiles')
-    .select('id, full_name, email, role, mentor_id')
+    .select('id, full_name, role, mentor_id')
     .eq('role', 'intern')
     .order('full_name')
 
@@ -53,56 +56,48 @@ export default async function AdminAttendancePage() {
   ).length ?? 0
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">{today}</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Giám sát điểm danh toàn hệ thống</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Theo dõi sĩ số có mặt và thời gian thực tập của tất cả sinh viên toàn trường.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Quản trị hệ thống"
+        title="Giám sát điểm danh toàn hệ thống"
+        description="Theo dõi sĩ số có mặt và thời gian thực tập của tất cả sinh viên toàn trường."
+      />
 
       <section className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs text-slate-500">Tổng số Thực tập sinh</p>
-          <p className="text-2xl font-bold mt-1 text-slate-900 dark:text-slate-100">{profiles.length}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs text-slate-500">Đã Check-in hôm nay</p>
-          <p className="text-2xl font-bold mt-1 text-emerald-700 dark:text-emerald-400">{checkedInTodayCount}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs text-slate-500">Chưa điểm danh hôm nay</p>
-          <p className="text-2xl font-bold mt-1 text-amber-700 dark:text-amber-400">{Math.max(0, profiles.length - checkedInTodayCount)}</p>
-        </div>
+        <StatCard label="Tổng số Thực tập sinh" value={profiles.length} icon={Users} tone="neutral" />
+        <StatCard label="Đã Check-in hôm nay" value={checkedInTodayCount} icon={CalendarCheck} tone="success" />
+        <StatCard label="Chưa điểm danh hôm nay" value={Math.max(0, profiles.length - checkedInTodayCount)} icon={WarningCircle} tone="warning" />
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="border-b border-slate-200 bg-slate-50 px-5 py-3 dark:border-slate-800 dark:bg-slate-950">
-          <h2 className="text-sm font-semibold">Danh sách bản ghi điểm danh</h2>
-        </div>
-        <div className="grid grid-cols-[1.5fr_1.2fr_1.5fr_1fr] gap-3 border-b border-slate-200 bg-slate-50/50 px-5 py-3 text-xs font-semibold uppercase text-slate-500 dark:border-slate-800 dark:bg-slate-900">
-          <span>Thực tập sinh</span>
-          <span>Ngày</span>
-          <span>Check-in / Check-out</span>
-          <span>Tổng giờ làm</span>
-        </div>
-        {(records as AttendanceRecord[] | null)?.map((record) => (
-          <div key={record.id} className="grid grid-cols-[1.5fr_1.2fr_1.5fr_1fr] gap-3 border-b border-slate-100 px-5 py-4 text-sm last:border-0 dark:border-slate-800">
-            <span className="font-medium text-slate-900 dark:text-slate-100">{profileNames.get(record.intern_id) ?? 'Thực tập sinh'}</span>
-            <span className="text-slate-500">{record.date}</span>
-            <span className="text-slate-500">{formatTime(record.check_in_time)} → {formatTime(record.check_out_time)}</span>
-            <span className="font-semibold text-emerald-700 dark:text-emerald-400">{record.total_hours ? `${record.total_hours} giờ` : record.status}</span>
+      <SectionCard>
+        <SectionHeader title="Danh sách bản ghi điểm danh" icon={CalendarBlank} />
+        {records?.length ? (
+          <div className="divide-y divide-border">
+            <div className="grid grid-cols-[1.5fr_1.2fr_1.5fr_1fr] gap-3 bg-muted px-5 py-3 text-xs font-semibold uppercase text-muted-foreground">
+              <span>Thực tập sinh</span>
+              <span>Ngày</span>
+              <span>Check-in / Check-out</span>
+              <span>Tổng giờ làm</span>
+            </div>
+            {(records as AttendanceRecord[]).map((record) => (
+              <div key={record.id} className="grid grid-cols-[1.5fr_1.2fr_1.5fr_1fr] gap-3 px-5 py-4 text-sm">
+                <span className="font-medium">{profileNames.get(record.intern_id) ?? 'Thực tập sinh'}</span>
+                <span className="text-muted-foreground tabular-nums">{record.date}</span>
+                <span className="text-muted-foreground tabular-nums">{formatTime(record.check_in_time)} - {formatTime(record.check_out_time)}</span>
+                <span className="font-semibold text-success tabular-nums">{record.total_hours ? `${record.total_hours} giờ` : statusText(record.status)}</span>
+              </div>
+            ))}
           </div>
-        ))}
-        {!records?.length && (
-          <p className="p-6 text-sm text-slate-400 text-center">Chưa có dữ liệu điểm danh.</p>
+        ) : (
+          <EmptyState
+            icon={CalendarBlank}
+            title="Chưa có dữ liệu điểm danh"
+            description="Các bản ghi chấm công của thực tập sinh sẽ xuất hiện ở đây."
+          />
         )}
-      </section>
+      </SectionCard>
     </div>
   )
 }
 
-function formatTime(value: string | null) {
-  return value ? new Date(value).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--'
-}
+

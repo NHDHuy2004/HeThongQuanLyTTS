@@ -1,101 +1,170 @@
 import { createClient } from '@/lib/supabase/server'
-import { uploadDocument } from './actions'
-import { Button } from '@/components/ui/button'
-import { FolderOpen, UploadCloud, FileText } from 'lucide-react'
+import { getSession } from '@/lib/session'
+import { FolderOpen } from '@phosphor-icons/react/dist/ssr/FolderOpen'
+import { FileText } from '@phosphor-icons/react/dist/ssr/FileText'
+import { FolderUser } from '@phosphor-icons/react/dist/ssr/FolderUser'
+import { PageHeader } from '@/components/page/page-header'
+import { SectionCard, SectionHeader } from '@/components/page/section-card'
+import { EmptyState } from '@/components/page/empty-state'
+import { DocumentUpload } from '@/components/interns/document-upload'
+import { DocumentDownloadLink } from '@/components/interns/document-download'
+
+type StorageFile = {
+  id: string
+  name: string
+  metadata?: { size?: number } | null
+}
+
+async function listFolder(supabase: Awaited<ReturnType<typeof createClient>>, folderId: string): Promise<StorageFile[]> {
+  const { data } = await supabase.storage
+    .from('documents')
+    .list(folderId, { sortBy: { column: 'created_at', order: 'desc' } })
+  return (data ?? []) as StorageFile[]
+}
+
+function FlattenedFileList({ ownerId, files }: { ownerId: string; files: StorageFile[] }) {
+  if (!files.length) {
+    return <p className="p-5 text-xs text-muted-foreground">Chưa có tài liệu trong thư mục này.</p>
+  }
+  return (
+    <div className="divide-y divide-border">
+      {files.map((file) => (
+        <div key={file.id} className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/50">
+          <div className="flex min-w-0 items-center gap-3">
+            <FileText className="size-4 shrink-0 text-primary" weight="bold" />
+            <span className="truncate text-sm font-medium">{file.name}</span>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="font-mono text-xs text-muted-foreground tabular-nums">
+              {file.metadata?.size ? `${Math.ceil(file.metadata.size / 1024)} KB` : ''}
+            </span>
+            <DocumentDownloadLink path={`${ownerId}/${file.name}`} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default async function DocumentsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const { user, profile } = await getSession()
+  if (!user || !profile) return null
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  const role = profile.role
+  const isMentor = role === 'mentor'
 
-  const role = profile?.role ?? 'intern'
+  const myFiles = await listFolder(supabase, user.id)
 
-  const { data: files } = await supabase.storage
-    .from('documents')
-    .list(user.id, { sortBy: { column: 'created_at', order: 'desc' } })
+  let internsWithFiles: Array<{ id: string; full_name: string; files: StorageFile[] }> = []
+  if (isMentor) {
+    const { data: interns } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('mentor_id', user.id)
+      .eq('role', 'intern')
+      .order('full_name')
+
+    if (interns) {
+      const withFiles = await Promise.all(
+        interns.map(async (intern) => ({
+          id: intern.id,
+          full_name: intern.full_name,
+          files: await listFolder(supabase, intern.id),
+        })),
+      )
+      internsWithFiles = withFiles
+    }
+  }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-          {role === 'admin' && 'Quản trị hệ thống'}
-          {role === 'mentor' && 'Tài liệu hướng dẫn'}
-          {role === 'intern' && 'Hồ sơ & Báo cáo'}
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {role === 'intern' ? 'Tài liệu & Báo cáo thực tập' : 'Kho tài liệu & Báo cáo'}
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {role === 'intern' && 'Tải lên CV, đề cương và báo cáo định kỳ nộp cho Mentor.'}
-          {role === 'mentor' && 'Chia sẻ tài liệu hướng dẫn và lưu trữ hồ sơ đào tạo thực tập sinh.'}
-          {role === 'admin' && 'Lưu trữ các văn bản, hướng dẫn quy chuẩn và hồ sơ thực tập.'}
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title={isMentor ? 'Kho tài liệu & Báo cáo' : 'Tài liệu & Báo cáo thực tập'}
+        description={
+          isMentor
+            ? 'Quản lý tài liệu cá nhân và duyệt báo cáo do thực tập sinh nộp.'
+            : role === 'intern'
+              ? 'Tải lên CV, đề cương và báo cáo định kỳ nộp cho Mentor.'
+              : 'Lưu trữ các văn bản, hướng dẫn quy chuẩn và hồ sơ thực tập.'
+        }
+      />
 
-      {/* Upload Box */}
-      <form
-        action={uploadDocument}
-        className="flex flex-col gap-4 rounded-2xl border-2 border-dashed border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
-            <UploadCloud className="size-5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Tải lên tệp tài liệu mới</p>
-            <p className="text-xs text-slate-500">Định dạng hỗ trợ: PDF, Word (.doc, .docx). Tối đa 10MB.</p>
-          </div>
-        </div>
+      <SectionCard>
+        <SectionHeader
+          title="Tải lên tài liệu mới"
+          icon={FolderOpen}
+          description="Định dạng hỗ trợ: PDF, Word (.doc, .docx). Tối đa 10MB."
+        />
+        <DocumentUpload />
+      </SectionCard>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <input
-            name="file"
-            type="file"
-            accept=".pdf,.doc,.docx"
-            required
-            className="text-xs file:mr-2.5 file:rounded-md file:border-0 file:bg-slate-100 file:px-2.5 file:py-1 file:text-xs file:font-medium dark:file:bg-slate-800 dark:file:text-slate-200"
-          />
-          <Button type="submit" size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white">
-            Tải lên
-          </Button>
-        </div>
-      </form>
-
-      {/* Files List */}
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="border-b border-slate-200 bg-slate-50 px-5 py-3.5 dark:border-slate-800 dark:bg-slate-950 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <FolderOpen className="size-4 text-emerald-600" /> Danh sách tệp đã tải lên
-          </h2>
-          <span className="text-xs text-slate-500">{files?.length ?? 0} tệp</span>
-        </div>
-
-        {files?.length ? (
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {files.map((file) => (
-              <div key={file.id} className="flex items-center justify-between gap-3 p-4 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                <div className="flex items-center gap-3 min-w-0">
-                  <FileText className="size-4 shrink-0 text-emerald-600" />
-                  <span className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{file.name}</span>
-                </div>
-                <span className="shrink-0 text-xs text-slate-400 font-mono">
-                  {file.metadata?.size ? `${Math.ceil(file.metadata.size / 1024)} KB` : ''}
-                </span>
-              </div>
-            ))}
-          </div>
+      <SectionCard>
+        <SectionHeader
+          title="Tài liệu cá nhân"
+          icon={FolderOpen}
+          action={<span className="text-xs text-muted-foreground tabular-nums">{myFiles.length} tệp</span>}
+        />
+        {myFiles.length ? (
+          <FlattenedFileList ownerId={user.id} files={myFiles} />
         ) : (
-          <div className="p-8 text-center text-sm text-slate-400">
-            Chưa có tài liệu nào trong thư mục của bạn.
-          </div>
+          <EmptyState
+            icon={FolderOpen}
+            title="Chưa có tài liệu nào"
+            description="Tài liệu tải lên sẽ xuất hiện ở đây."
+          />
         )}
-      </section>
+      </SectionCard>
+
+      {isMentor && (
+        <SectionCard>
+          <SectionHeader
+            title="Báo cáo của Thực tập sinh"
+            icon={FolderUser}
+            description="Tài liệu do các thực tập sinh bạn hướng dẫn tải lên."
+          />
+          {internsWithFiles.length ? (
+            <div className="divide-y divide-border">
+              {internsWithFiles.map((intern) => (
+                <div key={intern.id} className="p-5">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                    {intern.full_name}
+                    <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground tabular-nums">
+                      {intern.files.length} tệp
+                    </span>
+                  </h3>
+                  {intern.files.length ? (
+                    <div className="divide-y divide-border rounded-lg border border-border">
+                      {intern.files.map((file) => (
+                        <div key={file.id} className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50">
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <FileText className="size-3.5 shrink-0 text-primary" weight="bold" />
+                            <span className="truncate text-sm">{file.name}</span>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2.5">
+                            <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                              {file.metadata?.size ? `${Math.ceil(file.metadata.size / 1024)} KB` : ''}
+                            </span>
+                            <DocumentDownloadLink path={`${intern.id}/${file.name}`} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Thực tập sinh này chưa nộp tài liệu nào.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={FolderUser}
+              title="Chưa có thực tập sinh phụ trách"
+              description="Khi bạn được phân công thực tập sinh, báo cáo của họ sẽ xuất hiện tại đây."
+            />
+          )}
+        </SectionCard>
+      )}
     </div>
   )
 }

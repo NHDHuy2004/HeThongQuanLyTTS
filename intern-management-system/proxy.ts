@@ -1,7 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+const PROTECTED_ROUTES = /^\/(admin|mentor|intern)(\/|$)/
+const AUTH_ROUTES = ['/login']
+
+function copyCookies(from: NextResponse, to: NextResponse) {
+  from.cookies.getAll().forEach((cookie) => to.cookies.set(cookie))
+  return to
+}
+
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -23,35 +31,43 @@ export async function middleware(request: NextRequest) {
     },
   )
 
+  const pathname = request.nextUrl.pathname
+  const isProtectedRoute = PROTECTED_ROUTES.test(pathname)
+  const isAuthRoute = AUTH_ROUTES.some((route) => pathname === route)
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  const pathname = request.nextUrl.pathname
-  const isProtectedRoute = pathname.startsWith('/dashboard') || /^\/(admin|mentor|intern)(\/|$)/.test(pathname)
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)
-    return NextResponse.redirect(url)
+    return copyCookies(response, NextResponse.redirect(url))
   }
 
-  if (user) {
+  if (user && (isProtectedRoute || isAuthRoute)) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
-    const userRole = profile?.role ?? 'intern'
+    const userRole = profile?.role ?? null
 
-    if (pathname === '/login' || pathname === '/dashboard') {
-      return NextResponse.redirect(new URL(`/${userRole}`, request.url))
+    if (isAuthRoute) {
+      if (userRole) {
+        return copyCookies(response, NextResponse.redirect(new URL(`/${userRole}`, request.url)))
+      }
+      return response
     }
 
-    const rolePath = pathname.match(/^\/(admin|mentor|intern)(\/|$)/)?.[1]
+    const rolePath = pathname.match(PROTECTED_ROUTES)?.[1]
     if (rolePath && userRole !== rolePath) {
-      return NextResponse.redirect(new URL(`/${userRole}`, request.url))
+      const url = userRole
+        ? new URL(`/${userRole}`, request.url)
+        : new URL('/login', request.url)
+      return copyCookies(response, NextResponse.redirect(url))
     }
   }
 
