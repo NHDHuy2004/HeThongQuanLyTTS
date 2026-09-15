@@ -128,7 +128,7 @@ create trigger profiles_set_updated_at
 before update on public.profiles
 for each row execute function public.set_updated_at();
 
--- Chặn tự thay role/mentor_id của chính mình (chống leo quyền)
+-- Chặn tự thay đổi các trường quản trị của chính mình (chống leo quyền)
 create or replace function public.prevent_role_escalation()
 returns trigger
 language plpgsql
@@ -140,8 +140,14 @@ declare
 begin
   select role into v_actor from public.profiles where id = auth.uid();
   if new.id = auth.uid() and coalesce(v_actor, 'intern'::public.user_role) <> 'admin'::public.user_role then
-    if new.role is distinct from old.role or new.mentor_id is distinct from old.mentor_id then
-      raise exception 'Khong duoc tu thay doi vai tro hoac mentor cua chinh minh.';
+    if new.role is distinct from old.role
+      or new.mentor_id is distinct from old.mentor_id
+      or new.internship_status is distinct from old.internship_status
+      or new.start_date is distinct from old.start_date
+      or new.end_date is distinct from old.end_date
+      or new.department_id is distinct from old.department_id
+      or new.report_interval_days is distinct from old.report_interval_days then
+      raise exception 'Khong duoc tu thay doi thong tin quan ly cua chinh minh.';
     end if;
   end if;
   return new;

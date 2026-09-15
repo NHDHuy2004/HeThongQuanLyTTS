@@ -1,7 +1,10 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
+import { X } from '@phosphor-icons/react/dist/ssr/X'
 import type { ReactNode } from 'react'
+import { useEffect } from 'react'
+import { Button } from '@/components/ui/button'
 
 interface BottomSheetProps {
   open: boolean
@@ -15,6 +18,17 @@ interface BottomSheetProps {
  * Content scrolls internally, capped at 85dvh.
  */
 export function BottomSheet({ open, onClose, title, children }: BottomSheetProps) {
+  useEffect(() => {
+    if (!open) return
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open, onClose])
+
   return (
     <AnimatePresence>
       {open && (
@@ -47,8 +61,18 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
               <span className="h-1.5 w-11 rounded-full bg-border" />
             </div>
             {title && (
-              <div className="border-b border-border px-4 py-3">
-                <h2 className="text-center text-base font-semibold tracking-tight">{title}</h2>
+              <div className="flex items-center border-b border-border px-4 py-3">
+                <h2 className="flex-1 text-center text-base font-semibold tracking-tight">{title}</h2>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="ml-auto"
+                  onClick={onClose}
+                  aria-label="Dong"
+                >
+                  <X weight="bold" />
+                </Button>
               </div>
             )}
             <div className="max-h-[calc(85dvh-56px)] overflow-y-auto scrollbar-none">

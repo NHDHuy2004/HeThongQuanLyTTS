@@ -47,6 +47,7 @@ export function formatRelativeTime(dateStr: string): string {
   const diffHour = Math.floor(diffMs / 3600000)
   const diffDay = Math.floor(diffMs / 86400000)
 
+  if (diffMs < 0) return 'Sap toi'
   if (diffMin < 1) return 'Vua xong'
   if (diffMin < 60) return `${diffMin} phut truoc`
   if (diffHour < 24) return `${diffHour} gio truoc`

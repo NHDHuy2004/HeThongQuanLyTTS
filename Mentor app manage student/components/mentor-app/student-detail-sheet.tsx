@@ -71,55 +71,69 @@ export function StudentDetailSheet({
   onClose: () => void
 }) {
   const [detail, setDetail] = useState<InternDetailData | null>(null)
+  const [detailInternId, setDetailInternId] = useState<string | null>(null)
   const [errorText, setErrorText] = useState<string | null>(null)
+  const [errorInternId, setErrorInternId] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     if (!internId) return
+
     const id = internId
     let active = true
 
     async function load() {
       const supabase = createClient()
-      const { data: tasks } = await supabase
+      const [tasksResult, requestsResult, reportsResult] = await Promise.all([
+        supabase
         .from('tasks')
         .select('id, title, status, deadline, created_at')
         .eq('assignee_id', id)
         .order('created_at', { ascending: false })
-        .limit(50)
-      const { data: requests } = await supabase
+        .limit(50),
+        supabase
         .from('leave_requests')
         .select('id, type, status, start_date, end_date, created_at')
         .eq('intern_id', id)
         .order('created_at', { ascending: false })
-        .limit(10)
-      const { data: reports } = await supabase
+        .limit(10),
+        supabase
         .from('periodic_reports')
         .select('id, status, period_number, submitted_at, created_at')
         .eq('intern_id', id)
         .order('created_at', { ascending: false })
-        .limit(10)
+        .limit(10),
+      ])
+
+      if (tasksResult.error) throw tasksResult.error
+      if (requestsResult.error) throw requestsResult.error
+      if (reportsResult.error) throw reportsResult.error
 
       if (active) {
-        const taskList = (tasks ?? []) as TaskBrief[]
+        const taskList = (tasksResult.data ?? []) as TaskBrief[]
         const now = Date.now()
         const openTasks = taskList.filter((t) =>
           ['pending_acceptance', 'in_progress', 'under_review'].includes(t.status),
         )
         setDetail({
           tasks: taskList,
-          requests: (requests ?? []) as RequestBrief[],
-          reports: (reports ?? []) as ReportBrief[],
+          requests: (requestsResult.data ?? []) as RequestBrief[],
+          reports: (reportsResult.data ?? []) as ReportBrief[],
           overdueCount: openTasks.filter(
             (t) => t.deadline && new Date(t.deadline).getTime() < now,
           ).length,
         })
+        setDetailInternId(id)
         setErrorText(null)
+        setErrorInternId(null)
       }
     }
 
     load().catch(() => {
-      if (active) setErrorText('Khong the tai du lieu.')
+      if (active) {
+        setErrorText('Khong the tai du lieu.')
+        setErrorInternId(id)
+      }
     })
 
     return () => {
@@ -127,15 +141,23 @@ export function StudentDetailSheet({
     }
   }, [internId, attempt])
 
-  const loading = !!internId && detail === null && errorText === null
+  const hasDetail = !!internId && detailInternId === internId
+  const hasError = !!internId && errorInternId === internId
+  const loading = !!internId && !hasDetail && !hasError
 
-  const tasks = detail?.tasks ?? []
-  const requests = detail?.requests ?? []
-  const reports = detail?.reports ?? []
+  const tasks = hasDetail ? detail?.tasks ?? [] : []
+  const requests = hasDetail ? detail?.requests ?? [] : []
+  const reports = hasDetail ? detail?.reports ?? [] : []
   const openTasks = tasks.filter((t) => ['pending_acceptance', 'in_progress', 'under_review'].includes(t.status))
   const completedTasks = tasks.filter((t) => t.status === 'completed')
   const pendingRequests = requests.filter((r) => r.status === 'pending')
   const progress = internshipProgress(intern?.start_date ?? null, intern?.end_date ?? null)
+
+  function retryLoad() {
+    setErrorText(null)
+    setErrorInternId(null)
+    setAttempt((a) => a + 1)
+  }
 
   function formatDate(dateStr: string | null) {
     if (!dateStr) return null
@@ -215,7 +237,7 @@ export function StudentDetailSheet({
           {errorText && !loading && (
             <div className="mt-5 flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-4 py-8 text-center">
               <p className="text-sm font-medium text-destructive">{errorText}</p>
-              <Button onClick={() => setAttempt((a) => a + 1)} variant="outline" className="h-10">
+              <Button onClick={retryLoad} variant="outline" className="h-10">
                 Thu lai
               </Button>
             </div>
