@@ -16,19 +16,19 @@ export async function uploadDocument(
   formData: FormData,
 ): Promise<ActionResult> {
   const file = formData.get('file')
-  if (!(file instanceof File) || file.size === 0) return fail('Vui lòng chọn file.')
-  if (file.size > 10 * 1024 * 1024) return fail('File không được vượt quá 10MB.')
+  if (!(file instanceof File) || file.size === 0) return fail('Vui lòng chọn tệp.')
+  if (file.size > 10 * 1024 * 1024) return fail('Tệp không được vượt quá 10MB.')
   if (!ALLOWED_TYPES.includes(file.type)) return fail('Chỉ hỗ trợ PDF và Word.')
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return fail('Bạn cần đăng nhập để upload.')
+  if (!user) return fail('Bạn cần đăng nhập để tải tệp lên.')
 
   const path = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '-')}`
   const { error } = await supabase.storage
     .from('documents')
     .upload(path, file, { contentType: file.type, upsert: false })
-  if (error) return fail('Không thể upload file.')
+  if (error) return fail('Không thể tải tệp lên.')
 
   revalidatePath('/intern/documents')
   return OK

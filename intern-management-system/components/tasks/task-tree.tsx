@@ -67,7 +67,7 @@ function InternActions({ task }: { task: TaskRow }) {
         <input type="hidden" name="status" value="in_progress" />
         <Button size="sm" className="gap-1">
           <Handshake className="size-3.5" weight="bold" />
-          Xác nhận nhận task
+          Xác nhận nhận công việc
         </Button>
       </form>
     )
@@ -154,7 +154,7 @@ function TaskCard({
         <h3 className={`text-sm font-semibold ${depth === 1 ? 'flex items-center gap-1.5' : ''}`}>
           {depth === 1 && (
             <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-primary">
-              <GitBranch className="size-3.5" weight="bold" /> Sub
+              <GitBranch className="size-3.5" weight="bold" /> Công việc con
             </span>
           )}
           <span className={depth === 1 ? 'text-foreground/90' : ''}>{task.title}</span>

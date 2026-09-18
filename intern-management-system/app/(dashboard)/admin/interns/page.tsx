@@ -95,7 +95,7 @@ export default async function PermissionsPage() {
           <span>Thông tin tài khoản</span>
           <span>Vai trò hiện tại</span>
           <span>Mentor phụ trách</span>
-          <span>Đơn vị & Mentor (Cascading)</span>
+          <span>Đơn vị & Mentor</span>
         </div>
 
         <div className="divide-y divide-border">

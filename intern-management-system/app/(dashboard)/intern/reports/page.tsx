@@ -95,7 +95,7 @@ export default async function InternReportsPage() {
             <Notebook className="size-8 text-muted-foreground/40" weight="duotone" />
             <p className="text-sm font-medium text-foreground">Không còn đợt báo cáo nào chưa nộp</p>
             <p className="max-w-sm px-6 text-xs text-muted-foreground">
-              Bạn đã nộp đầy đủ các đợt báo cáo định kỳ. Hãy tiếp tục theo dõi lịch nộp mới từ Trưởng nhóm.
+              Bạn đã nộp đầy đủ các đợt báo cáo định kỳ. Hãy tiếp tục theo dõi lịch nộp mới từ Mentor của bạn.
             </p>
           </div>
         ) : (
