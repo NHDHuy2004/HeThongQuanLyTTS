@@ -98,12 +98,23 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_full_name text;
 begin
+  -- Quy định: BẮT BUỘC dùng Họ và tên chính chủ.
+  -- KHÔNG dùng kỹ thuật cắt chuỗi email (split_part) dưới bất kỳ hình thức nào.
+  -- Ưu tiên: full_name (đăng ký qua Form) -> name (đăng nhập qua Google/OAuth) -> 'Chưa cập nhật'.
+  v_full_name := coalesce(
+    nullif(new.raw_user_meta_data ->> 'full_name', ''),
+    nullif(new.raw_user_meta_data ->> 'name', ''),
+    'Chưa cập nhật'
+  );
+
   insert into public.profiles (id, email, full_name, role)
   values (
     new.id,
     new.email,
-    coalesce(new.raw_user_meta_data ->> 'full_name', new.email),
+    v_full_name,
     'intern'::public.user_role
   )
   on conflict (id) do nothing;

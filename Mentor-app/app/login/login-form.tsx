@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { signIn } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -63,6 +64,13 @@ export default function LoginForm() {
             {isPending ? 'Đang xử lý...' : 'Đăng nhập'}
           </Button>
         </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Chưa có tài khoản?{' '}
+          <Link href="/signup" className="font-medium text-primary">
+            Đăng ký
+          </Link>
+        </p>
       </div>
     </div>
   )
