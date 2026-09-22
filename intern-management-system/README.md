@@ -27,13 +27,13 @@ npm run dev
 ## Cài đặt cơ sở dữ liệu (Supabase)
 
 1. Với database **mới**: mở Supabase Dashboard > SQL Editor và chạy [supabase/schema.sql](supabase/schema.sql) (tạo toàn bộ bảng, enum, RLS, trigger, storage, realtime, seed).
-2. Với database **đã có**: chạy file migration trong [supabase/migrations](supabase/migrations) để nâng cấp lên task workflow 5 trạng thái và bảng `weekly_reports`.
+2. Với database **đã có**: chạy file migration trong [supabase/migrations](supabase/migrations) để nâng cấp lên task workflow 5 trạng thái và bảng `periodic_reports`.
 
 Admin đầu tiên được bootstrap qua email `nhdhuy1109@gmail.com` (có thể chỉnh dòng cuối `schema.sql`).
 
 ## Realtime
 
-Bật publication `supabase_realtime` cho các bảng `tasks`, `leave_requests`, `weekly_reports` (schema.sql đã tự đăng ký). Header dashboard hiển thị chuông thông báo khi có task mới, đơn nghỉ được duyệt hoặc báo cáo tuần mới.
+Bật publication `supabase_realtime` cho các bảng `tasks`, `leave_requests`, `periodic_reports` (schema.sql đã tự đăng ký). Header dashboard hiển thị chuông thông báo khi có task mới, đơn nghỉ được duyệt hoặc báo cáo mới.
 
 ## Deploy GitHub và Vercel
 

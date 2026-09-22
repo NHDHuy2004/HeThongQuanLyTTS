@@ -46,7 +46,7 @@ export default async function DashboardPage() {
   const canCheckOut = Boolean(todayRecord?.check_in_time && !todayRecord?.check_out_time)
 
   // Mentor profile
-  let mentorInfo: any = null
+  let mentorInfo: { full_name: string | null; email: string | null } | null = null
   if (profile.mentor_id) {
     const { data: mentor } = await supabase
       .from('profiles')
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
     .select('total_hours')
     .eq('intern_id', user.id)
     .gte('date', weekStart)
-  const weeklyHours = weekRecords?.reduce((sum: number, r: any) => sum + (r.total_hours ?? 0), 0) ?? 0
+  const weeklyHours = weekRecords?.reduce((sum: number, r) => sum + (r.total_hours ?? 0), 0) ?? 0
 
   // My open tasks
   const { data: myTasks } = await supabase
@@ -227,7 +227,7 @@ export default async function DashboardPage() {
         <StatCard label="Nhiệm vụ của bạn" value={myTasks?.length ?? 0} icon={ClipboardText} tone="primary" />
         <StatCard
           label="Đơn nghỉ đang duyệt"
-          value={myRequests?.filter((r: any) => r.status === 'pending').length ?? 0}
+          value={myRequests?.filter((r) => r.status === 'pending').length ?? 0}
           icon={CalendarBlank}
           tone="warning"
         />
@@ -246,7 +246,7 @@ export default async function DashboardPage() {
           />
           {myTasks?.length ? (
             <div className="divide-y divide-border">
-              {myTasks.map((task: any) => (
+              {myTasks.map((task) => (
                 <div key={task.id} className="flex items-center justify-between gap-3 px-5 py-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{task.title}</p>
@@ -282,7 +282,7 @@ export default async function DashboardPage() {
           />
           {myRequests?.length ? (
             <div className="divide-y divide-border">
-              {myRequests.map((req: any) => (
+              {myRequests.map((req) => (
                 <div key={req.id} className="flex items-center justify-between gap-3 px-5 py-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{req.type === 'leave' ? 'Nghỉ phép' : 'WFH'}</p>

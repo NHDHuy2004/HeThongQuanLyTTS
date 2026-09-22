@@ -116,7 +116,7 @@ export default async function EvaluationsPage() {
                           {statusLabel(ev.type_period)}
                         </Badge>
                         <h3 className="mt-1.5 text-sm font-semibold">
-                          {(ev as any).profiles?.full_name ?? profile.full_name}
+                          {ev.profiles?.full_name ?? profile.full_name}
                         </h3>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           Ngày đánh giá: {new Date(ev.created_at).toLocaleDateString('vi-VN')}

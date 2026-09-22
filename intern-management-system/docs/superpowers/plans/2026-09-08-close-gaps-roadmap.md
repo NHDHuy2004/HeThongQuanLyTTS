@@ -2,8 +2,8 @@
 
 Ngày: 2026-09-08. Trạng thái project: đã dựng gần hoàn chỉnh, cần lấp gap đối chiếu với spec.
 
-## Nhóm 1 - Auth middleware (Bước 3)
-- Đổi tên `proxy.ts` -> `middleware.ts`, đổi export `proxy` -> `middleware`.
+## Nhóm 1 - Auth proxy (Bước 3)
+- Giữ `proxy.ts` (Next 16: middleware được đổi tên thành proxy).
 - Kiểm tra build/lint.
 
 ## Nhóm 2 - Schema upgrade (Bước 2)

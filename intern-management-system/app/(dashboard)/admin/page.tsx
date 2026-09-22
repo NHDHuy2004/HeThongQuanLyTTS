@@ -121,7 +121,7 @@ export default async function AdminDashboardPage() {
           />
           {recentTasks?.length ? (
             <div className="divide-y divide-border">
-              {recentTasks.map((task: any) => (
+              {recentTasks.map((task) => (
                 <div key={task.id} className="flex items-center justify-between gap-3 px-5 py-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{task.title}</p>
@@ -157,7 +157,7 @@ export default async function AdminDashboardPage() {
           />
           {recentRequests?.length ? (
             <div className="divide-y divide-border">
-              {recentRequests.map((req: any) => (
+              {recentRequests.map((req) => (
                 <div key={req.id} className="flex items-center justify-between gap-3 px-5 py-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{req.profiles?.full_name ?? 'Thực tập sinh'}</p>

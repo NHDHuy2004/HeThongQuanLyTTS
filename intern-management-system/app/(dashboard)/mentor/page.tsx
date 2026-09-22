@@ -50,7 +50,7 @@ export default async function MentorDashboardPage() {
     .eq('role', 'intern')
     .order('full_name')
 
-  const internIds = myInterns?.map((i: any) => i.id) ?? []
+  const internIds = myInterns?.map((i) => i.id) ?? []
   const finalEvalDueCount = (myInterns ?? []).filter(needsFinalEvaluation).length
 
   // Pending requests for this mentor
@@ -132,7 +132,7 @@ export default async function MentorDashboardPage() {
         />
         {pendingRequests?.length ? (
           <div className="grid gap-3 p-5 sm:grid-cols-2">
-            {pendingRequests.map((req: any) => (
+            {pendingRequests.map((req) => (
               <div key={req.id} className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4">
                 <p className="text-sm font-medium">{req.profiles?.full_name}</p>
                 <p className="text-xs text-muted-foreground">
@@ -185,7 +185,7 @@ export default async function MentorDashboardPage() {
         />
         {myInterns?.length ? (
           <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
-            {myInterns.map((intern: any) => (
+            {myInterns.map((intern) => (
               <div key={intern.id} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
                 <div className="flex items-start gap-3">
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -233,7 +233,7 @@ export default async function MentorDashboardPage() {
         />
         {recentTasks?.length ? (
           <div className="divide-y divide-border">
-            {recentTasks.map((task: any) => (
+            {recentTasks.map((task) => (
               <div key={task.id} className="flex items-center justify-between gap-3 px-5 py-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{task.title}</p>

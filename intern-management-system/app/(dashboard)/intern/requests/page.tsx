@@ -35,14 +35,14 @@ export default async function RequestsPage() {
   const { data: requests } = await query
 
   // If intern, fetch mentor info or list of mentors
-  let allMentors: any[] = []
+  let allMentors: Array<{ id: string; full_name: string }> = []
   if (isIntern) {
     const { data: mentors } = await supabase
       .from('profiles')
       .select('id, full_name')
       .eq('role', 'mentor')
       .order('full_name')
-    allMentors = mentors ?? []
+    allMentors = (mentors ?? []) as Array<{ id: string; full_name: string }>
   }
 
   const pendingRequests = requests?.filter((r) => r.status === 'pending') ?? []
@@ -106,7 +106,7 @@ export default async function RequestsPage() {
                     <Badge variant={statusVariant(request.status)}>{statusLabel(request.status)}</Badge>
                   </div>
                   <p className="mt-1.5 text-xs text-muted-foreground">
-                    Thực tập sinh: <strong className="font-semibold text-foreground">{(request as any).profiles?.full_name ?? 'N/A'}</strong> - Thời gian:{' '}
+                    Thực tập sinh: <strong className="font-semibold text-foreground">{request.profiles?.full_name ?? 'N/A'}</strong> - Thời gian:{' '}
                     <span className="font-medium text-foreground tabular-nums">
                       {request.start_date} đến {request.end_date}
                     </span>
@@ -153,7 +153,7 @@ export default async function RequestsPage() {
                     <Badge variant={statusVariant(request.status)}>{statusLabel(request.status)}</Badge>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {!isIntern && `TTS: ${(request as any).profiles?.full_name ?? 'N/A'} - `}
+                    {!isIntern && `TTS: ${request.profiles?.full_name ?? 'N/A'} - `}
                     Thời gian: {request.start_date} đến {request.end_date} - Gửi lúc:{' '}
                     {new Date(request.created_at).toLocaleDateString('vi-VN')}
                   </p>

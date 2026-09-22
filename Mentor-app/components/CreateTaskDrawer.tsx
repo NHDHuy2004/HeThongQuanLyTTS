@@ -24,14 +24,6 @@ export interface InternOption {
   avatar_url: string | null
 }
 
-const MOCK_INTERNS: InternOption[] = [
-  { id: '00000000-0000-4000-8000-000000000001', full_name: 'Nguyễn Văn An', email: 'an@intern.dlu.edu.vn', avatar_url: null },
-  { id: '00000000-0000-4000-8000-000000000002', full_name: 'Trần Thị Bích', email: 'bich@intern.dlu.edu.vn', avatar_url: null },
-  { id: '00000000-0000-4000-8000-000000000003', full_name: 'Lê Hoàng Cường', email: 'cuong@intern.dlu.edu.vn', avatar_url: null },
-  { id: '00000000-0000-4000-8000-000000000004', full_name: 'Phạm Minh Dung', email: 'dung@intern.dlu.edu.vn', avatar_url: null },
-  { id: '00000000-0000-4000-8000-000000000005', full_name: 'Võ Thị Em', email: 'em@intern.dlu.edu.vn', avatar_url: null },
-]
-
 const CATEGORIES = ['Lập trình', 'Báo cáo', 'Nghiên cứu', 'Khác']
 
 function todayIso(): string {
@@ -54,7 +46,7 @@ export function CreateTaskDrawer({
   const { toast } = useToast()
   const router = useRouter()
 
-  const options = interns && interns.length > 0 ? interns : MOCK_INTERNS
+  const options = interns ?? []
 
   const [selected, setSelected] = useState<string[]>([])
   const [title, setTitle] = useState('')
@@ -122,36 +114,42 @@ export function CreateTaskDrawer({
               </p>
             )}
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
-              {options.map((intern) => {
-                const isSelected = selected.includes(intern.id)
-                return (
-                  <button
-                    key={intern.id}
-                    type="button"
-                    onClick={() => toggleIntern(intern.id)}
-                    aria-pressed={isSelected}
-                    aria-label={`Chọn ${intern.full_name}`}
-                    className="flex w-16 shrink-0 snap-start flex-col items-center gap-1.5 transition-transform duration-150 active:scale-95"
-                  >
-                    <span
-                      className={cn(
-                        'overflow-hidden rounded-full transition-shadow duration-150',
-                        isSelected && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
-                      )}
+              {options.length === 0 ? (
+                <p className="w-full rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+                  Chưa có thực tập sinh nào trong danh sách của bạn.
+                </p>
+              ) : (
+                options.map((intern) => {
+                  const isSelected = selected.includes(intern.id)
+                  return (
+                    <button
+                      key={intern.id}
+                      type="button"
+                      onClick={() => toggleIntern(intern.id)}
+                      aria-pressed={isSelected}
+                      aria-label={`Chọn ${intern.full_name}`}
+                      className="flex w-16 shrink-0 snap-start flex-col items-center gap-1.5 transition-transform duration-150 active:scale-95"
                     >
-                      <Avatar src={intern.avatar_url} name={intern.full_name} size={48} />
-                    </span>
-                    <span
-                      className={cn(
-                        'w-full truncate text-center text-xs leading-tight',
-                        isSelected ? 'font-medium text-primary' : 'text-muted-foreground',
-                      )}
-                    >
-                      {intern.full_name}
-                    </span>
-                  </button>
-                )
-              })}
+                      <span
+                        className={cn(
+                          'overflow-hidden rounded-full transition-shadow duration-150',
+                          isSelected && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
+                        )}
+                      >
+                        <Avatar src={intern.avatar_url} name={intern.full_name} size={48} />
+                      </span>
+                      <span
+                        className={cn(
+                          'w-full truncate text-center text-xs leading-tight',
+                          isSelected ? 'font-medium text-primary' : 'text-muted-foreground',
+                        )}
+                      >
+                        {intern.full_name}
+                      </span>
+                    </button>
+                  )
+                })
+              )}
             </div>
           </section>
 
